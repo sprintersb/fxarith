@@ -185,9 +185,6 @@ public:
 
     void print (bool raw = 0) const
     {
-        //int fnibbles = (FBIT + 3) / 4;
-        //T fmask = ((T) 1 << FBIT) - 1;
-        //T t = v << (((unsigned) -FBIT) % 4);
         char name[5], *p = name;
         if (!S)        *p++ = 'U';
         if (FBIT == 8) *p++ = 'H';
