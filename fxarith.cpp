@@ -31,13 +31,14 @@ public:
     static constexpr T mask = ((T) 1 << bitsize) - 1;
     static constexpr T signmask = (T) 1 << (bitsize - 1);
     static constexpr T maxV = mask >> S;
+    static constexpr FBit half = FBit::gen ((T) 1 << (FBIT - 1));
 
     using I = typename IType<S, bitsize>::type;
     using U = typename IType<0, bitsize>::type;
 
     T v;
 
-    static T extend (T t)
+    static constexpr T extend (T t)
     {
         return S && (t & signmask)
             ? t | -signmask
@@ -49,7 +50,7 @@ public:
         *this = FBit (f);
     }
 
-    FBit () : v(0) {}
+    constexpr FBit () : v(0) {}
 
     FBit (double f)
     {
@@ -70,7 +71,7 @@ public:
             v = - std::min (v, 1 + maxV);
     }
 
-    static FBit gen (T v)
+    static constexpr FBit gen (T v)
     {
         //printf ("{v=%d}",(int)v);
         FBit x;
@@ -97,6 +98,13 @@ public:
     {
         return S ? v & signmask : 0;
     }
+
+    bool operator == (const FBit &y) const { return extend(v) == extend(y.v); }
+    bool operator != (const FBit &y) const { return extend(v) != extend(y.v); }
+    bool operator <= (const FBit &y) const { return extend(v) <= extend(y.v); }
+    bool operator >= (const FBit &y) const { return extend(v) >= extend(y.v); }
+    bool operator <  (const FBit &y) const { return extend(v) <  extend(y.v); }
+    bool operator >  (const FBit &y) const { return extend(v) >  extend(y.v); }
 
     FBit operator - () const
     {
@@ -163,6 +171,18 @@ public:
         return gen (ab);
     }
 
+    FBit sqrt () const
+    {
+        double d = std::ldexp ((double) asInt(), FBIT);
+        double q = std::sqrt (d);
+        return FBit::gen ((I) q);
+    }
+
+    FBit absdiff (const FBit &y) const
+    {
+        return *this > y ? *this - y : y - *this;
+    }
+
     void print (bool raw = 0) const
     {
         //int fnibbles = (FBIT + 3) / 4;
@@ -184,13 +204,16 @@ public:
     }
 };
 
+using uaccum = FBit<0, 16, 16>;
 using accum = FBit<1, 16, 15>;
 using ufract = FBit<0, 0, 16>;
 using uhfract = FBit<0, 0, 8>;
 
+uaccum  ukbits  (int i) { return uaccum::gen (i);  }
 ufract  urbits  (int i) { return ufract::gen (i);  }
 uhfract uhrbits (int i) { return uhfract::gen (i); }
 
+unsigned bitsuk  (uaccum x)  { return x.asInt(); }
 unsigned bitsur  (ufract x)  { return x.asInt(); }
 unsigned bitsuhr (uhfract x) { return x.asInt(); }
 
